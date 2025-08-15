@@ -1,5 +1,8 @@
 // Filename: js/script.js - Upgraded for Chapter-Based Dashboard & Leaderboard
 
+// === পরিবর্তন ১: CountUp ক্লাসটি মডিউল থেকে ইম্পোর্ট করা হয়েছে ===
+import { CountUp } from 'https://cdn.jsdelivr.net/npm/countup.js@2.0.7/dist/countUp.min.js';
+
 document.addEventListener('DOMContentLoaded', () => {
     // Firebase Authentication Check
     firebase.auth().onAuthStateChanged(user => {
@@ -41,7 +44,7 @@ function initApp(user) {
     // --- Firebase থেকে অধ্যায়-ভিত্তিক ডেটা লোড ---
     loadChapterLeaderboard(db, chapterKey, user); // অধ্যায়-ভিত্তিক লিডারবোর্ড
     loadDashboardData(db, user.uid, chapterKey); // অধ্যায়-ভিত্তিক ড্যাশবোর্ড
-    generateUserResult(db, user, chapterKey, chapterName); // === নতুন: অধ্যায়-ভিত্তিক রেজাল্ট কার্ড ===
+    generateUserResult(db, user, chapterKey, chapterName); // অধ্যায়-ভিত্তিক রেজাল্ট কার্ড
 }
 
 // ===============================================
@@ -226,7 +229,6 @@ function loadChapterLeaderboard(db, chapterKey) {
         });
 }
 
-// === নতুন ফাংশন: ইউজারের রেজাল্ট কার্ড তৈরি করা === (আগেরটি ডিলিট করে এটি বসান)
 /**
  * Generates and displays the current user's result card with advanced features.
  * @param {firebase.firestore.Firestore} db
@@ -256,30 +258,25 @@ function generateUserResult(db, user, chapterKey, chapterDisplayName) {
                 const userName = user.displayName || 'Unknown User';
                 const userPhoto = user.photoURL || 'images/default-avatar.png';
                 
-                // === নতুন তথ্য গণনা ===
                 const totalCorrect = chapterData.totalCorrect || 0;
                 const totalWrong = chapterData.totalWrong || 0;
                 const totalQuestions = totalCorrect + totalWrong;
                 const accuracy = totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
                 const betterThanPercentage = totalParticipants > 1 ? Math.round(((totalParticipants - rank) / (totalParticipants - 1)) * 100) : 100;
 
-                // === ডাইনামিক বর্ডার ক্লাস ===
                 let rankClass = 'rank-bronze';
                 if (rank <= 3) rankClass = 'rank-gold';
                 else if (rank <= 10) rankClass = 'rank-silver';
                 
-                // === ব্যাজ সিস্টেম ===
                 const badges = [];
                 if (rank === 1) badges.push({ text: '🏆 অধ্যায়ের সেরা', class: 'topper' });
                 if (accuracy >= 95) badges.push({ text: '🎯 নির্ভুলতার রাজা', class: 'accuracy' });
 
-                // === মোটিভেশনাল মেসেজ ===
                 let motivationalMessage = '';
                 if (accuracy >= 90) motivationalMessage = "অসাধারণ! তোমার প্রস্তুতি शिखरে। চালিয়ে যাও!";
                 else if (accuracy >= 70) motivationalMessage = "দারুণ চেষ্টা! ভুলগুলো আরেকবার দেখে নিলেই তুমি সেরা হবে।";
                 else motivationalMessage = "চিন্তার কিছু নেই, প্রতিটি ভুলই নতুন কিছু শেখার সুযোগ। আবার চেষ্টা করো!";
                 
-                // === নতুন HTML কাঠামো ===
                 const cleanChapterName = chapterDisplayName.replace('Biology ', '');
                 const shareText = `আমি '${cleanChapterName}' অধ্যায়ে ${score} স্কোর করেছি! Study With Keshab-এ আমার র‍্যাঙ্ক #${rank}। তুমিও তোমার প্রস্তুতি যাচাই করো!`;
                 const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + ' ' + window.location.href)}`;
@@ -328,15 +325,12 @@ function generateUserResult(db, user, chapterKey, chapterDisplayName) {
                     </div>
                 `;
 
-                // === লাইব্রেরিগুলো ইনিশিয়ালাইজ করুন ===
-                // 1. কাউন্ট-আপ অ্যানিমেশন
-                new countUp.CountUp('user-score', score, { duration: 1.5 }).start();
-                new countUp.CountUp('user-rank', rank, { prefix: '#', duration: 1.5 }).start();
+                // === পরিবর্তন ২: new countUp.CountUp এর বদলে new CountUp ব্যবহার করা হয়েছে ===
+                new CountUp('user-score', score, { duration: 1.5 }).start();
+                new CountUp('user-rank', rank, { prefix: '#', duration: 1.5 }).start();
                 
-                // 2. ডোনাট চার্ট
                 createAccuracyChart(accuracy);
 
-                // 3. ছবি ডাউনলোড বাটন
                 document.getElementById('download-result-btn').addEventListener('click', function(e) {
                     const btn = e.currentTarget;
                     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> প্রসেসিং...';
@@ -345,7 +339,7 @@ function generateUserResult(db, user, chapterKey, chapterDisplayName) {
                     const resultCard = document.querySelector('.result-card');
                     html2canvas(resultCard, {
                         backgroundColor: document.body.classList.contains('dark-mode') ? '#1e1e1e' : '#ffffff',
-                        scale: 2 // উচ্চ রেজোলিউশনের জন্য
+                        scale: 2
                     }).then(canvas => {
                         const link = document.createElement('a');
                         link.download = `StudyWithKeshab-${cleanChapterName}-Result.png`;
@@ -385,31 +379,32 @@ function createAccuracyChart(accuracy) {
     const ctx = document.getElementById('accuracy-chart')?.getContext('2d');
     if (!ctx) return;
 
-    // চার্টের মাঝে টেক্সট দেখানোর জন্য একটি প্লাগইন
-    Chart.plugins.register({
-        beforeDraw: function(chart) {
-            if (chart.options.elements.center) {
-                const centerConfig = chart.options.elements.center;
-                const ctx = chart.chart.ctx;
-                const chartArea = chart.chartArea;
-                if(!chartArea) return;
+    if (Chart.plugins.getAll().length === 0) { // প্লাগইনটি শুধু একবার রেজিস্টার করবে
+        Chart.plugins.register({
+            beforeDraw: function(chart) {
+                if (chart.options.elements.center) {
+                    const centerConfig = chart.options.elements.center;
+                    const ctx = chart.chart.ctx;
+                    const chartArea = chart.chartArea;
+                    if(!chartArea) return;
 
-                const fontStyle = centerConfig.fontStyle || 'Arial';
-                const txt = centerConfig.text;
-                
-                ctx.save();
-                const fontSize = (chartArea.height / 114).toFixed(2);
-                ctx.font = `bold ${fontSize}em ${fontStyle}`;
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                const centerX = (chartArea.left + chartArea.right) / 2;
-                const centerY = (chartArea.top + chartArea.bottom) / 2;
-                ctx.fillStyle = centerConfig.color;
-                ctx.fillText(txt, centerX, centerY);
-                ctx.restore();
+                    const fontStyle = centerConfig.fontStyle || 'Arial';
+                    const txt = centerConfig.text;
+                    
+                    ctx.save();
+                    const fontSize = (chartArea.height / 114).toFixed(2);
+                    ctx.font = `bold ${fontSize}em ${fontStyle}`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    const centerX = (chartArea.left + chartArea.right) / 2;
+                    const centerY = (chartArea.top + chartArea.bottom) / 2;
+                    ctx.fillStyle = centerConfig.color;
+                    ctx.fillText(txt, centerX, centerY);
+                    ctx.restore();
+                }
             }
-        }
-    });
+        });
+    }
 
     const chartData = {
         datasets: [{
