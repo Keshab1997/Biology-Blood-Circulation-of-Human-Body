@@ -8,7 +8,6 @@ document.addEventListener('DOMContentLoaded', () => {
             initApp(user);
         } else {
             // যদি ব্যবহারকারী লগইন করা না থাকে, তাহলে লগইন পেজে পাঠিয়ে দেওয়া হবে।
-            // এই লিঙ্কটি আপনার মূল ওয়েবসাইটের লগইন পেজের লিঙ্ক হওয়া উচিত।
             window.location.href = 'https://keshab1997.github.io/Study-With-Keshab/login.html';
         }
     });
@@ -29,7 +28,6 @@ function initApp(user) {
     // অধ্যায়ের নাম HTML ফাইল থেকে dynamically লোড করা হচ্ছে
     if (typeof CURRENT_CHAPTER_NAME === 'undefined') {
         console.error("অধ্যায়ের নাম (CURRENT_CHAPTER_NAME) HTML ফাইলে সেট করা হয়নি।");
-        // একটি ডিফল্ট নাম ব্যবহার করা হচ্ছে বা একটি এরর দেখানো যেতে পারে
         const chapterName = "Unknown Chapter"; 
         alert("ত্রুটি: অধ্যায়ের নাম পাওয়া যায়নি।");
     }
@@ -43,6 +41,7 @@ function initApp(user) {
     // --- Firebase থেকে অধ্যায়-ভিত্তিক ডেটা লোড ---
     loadChapterLeaderboard(db, chapterKey, user); // অধ্যায়-ভিত্তিক লিডারবোর্ড
     loadDashboardData(db, user.uid, chapterKey); // অধ্যায়-ভিত্তিক ড্যাশবোর্ড
+    generateUserResult(db, user, chapterKey, chapterName); // === নতুন: অধ্যায়-ভিত্তিক রেজাল্ট কার্ড ===
 }
 
 // ===============================================
@@ -227,9 +226,87 @@ function loadChapterLeaderboard(db, chapterKey) {
         });
 }
 
+// === নতুন ফাংশন: ইউজারের রেজাল্ট কার্ড তৈরি করা ===
+/**
+ * Generates and displays the current user's result card for the chapter.
+ * @param {firebase.firestore.Firestore} db
+ * @param {firebase.User} user - The current authenticated user.
+ * @param {string} chapterKey - The Firestore-safe key for the chapter.
+ * @param {string} chapterDisplayName - The display name of the chapter.
+ */
+function generateUserResult(db, user, chapterKey, chapterDisplayName) {
+    const resultContainer = document.getElementById('result-card-container');
+    const noResultMessage = document.getElementById('no-result-message');
+    if (!resultContainer || !noResultMessage) return;
+
+    db.collection('users').orderBy(`chapters.${chapterKey}.totalScore`, 'desc').get()
+      .then(snapshot => {
+        let userFound = false;
+        let rank = 0;
+        
+        const filteredDocs = snapshot.docs.filter(doc => doc.data().chapters?.[chapterKey]?.totalScore > 0);
+
+        filteredDocs.forEach((doc, index) => {
+            rank = index + 1;
+            
+            if (doc.id === user.uid) {
+                userFound = true;
+                const chapterData = doc.data().chapters[chapterKey];
+                const score = chapterData.totalScore;
+                const userName = user.displayName || 'Unknown User';
+                const userPhoto = user.photoURL || 'images/default-avatar.png';
+                
+                const cleanChapterName = chapterDisplayName.replace('Biology ', '');
+                const shareText = `আমি '${cleanChapterName}' অধ্যায়ে ${score} স্কোর করেছি! Study With Keshab-এ আমার র‍্যাঙ্ক #${rank}। তুমিও তোমার প্রস্তুতি যাচাই করো!`;
+                
+                const pageUrl = window.location.href;
+                const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + ' ' + pageUrl)}`;
+                const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(pageUrl)}&quote=${encodeURIComponent(shareText)}`;
+
+                resultContainer.innerHTML = `
+                    <div class="result-card">
+                        <div class="result-header">
+                            <img src="${userPhoto}" alt="Profile Picture" class="result-profile-pic">
+                            <h3 class="result-user-name">${userName}</h3>
+                        </div>
+                        <p class="result-chapter-name">অধ্যায়: ${cleanChapterName}</p>
+                        <div class="result-details">
+                            <div class="result-item">
+                                <h4>মোট স্কোর</h4>
+                                <p>${score}</p>
+                            </div>
+                            <div class="result-item">
+                                <h4>র‍্যাঙ্ক</h4>
+                                <p>#${rank}</p>
+                            </div>
+                        </div>
+                        <div class="result-share">
+                            <p>আপনার রেজাল্ট শেয়ার করুন!</p>
+                            <div class="share-buttons">
+                                <a href="${whatsappUrl}" target="_blank" class="share-btn whatsapp"><i class="fab fa-whatsapp"></i> WhatsApp</a>
+                                <a href="${facebookUrl}" target="_blank" class="share-btn facebook"><i class="fab fa-facebook-f"></i> Facebook</a>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        });
+
+        if (userFound) {
+            noResultMessage.style.display = 'none';
+            resultContainer.style.display = 'block';
+        } else {
+            resultContainer.style.display = 'none';
+            noResultMessage.style.display = 'block';
+        }
+    })
+    .catch(error => {
+        console.error("Error fetching user result: ", error);
+        resultContainer.innerHTML = `<p style="text-align: center;">রেজাল্ট লোড করা সম্ভব হয়নি। অনুগ্রহ করে আবার চেষ্টা করুন।</p>`;
+    });
+}
 
 
-// js/script.js (নতুন কোড)
 /**
  * Loads all chapter-specific data for the user dashboard.
  * @param {firebase.firestore.Firestore} db
@@ -237,8 +314,6 @@ function loadChapterLeaderboard(db, chapterKey) {
  * @param {string} chapterKey - The Firestore-safe key for the chapter.
  */
 function loadDashboardData(db, userId, chapterKey) {
-    // স্বয়ংক্রিয়ভাবে কুইজ সেটের সংখ্যা গণনা করা হচ্ছে
-    // এটি #quiz-sets সেকশনের মধ্যে থাকা সব লিঙ্ক (<a> ট্যাগ) গণনা করে।
     const quizLinks = document.querySelectorAll('#quiz-sets .link-container a');
     const totalQuizzesInChapter = quizLinks.length;
 
@@ -248,7 +323,6 @@ function loadDashboardData(db, userId, chapterKey) {
             chapterData = doc.data().chapters[chapterKey];
         }
 
-        // গণনাকৃত মান ব্যবহার করে ড্যাশবোর্ড আপডেট করা হচ্ছে
         updateChapterProgress(chapterData.completedQuizzesCount || 0, totalQuizzesInChapter);
         updatePieChart(chapterData.totalCorrect || 0, chapterData.totalWrong || 0);
         updateUserAchievements(chapterData, totalQuizzesInChapter);
@@ -256,7 +330,6 @@ function loadDashboardData(db, userId, chapterKey) {
 
     }).catch(error => {
         console.error("Error loading user dashboard data:", error);
-        // ত্রুটি ঘটলেও গণনাকৃত মান ব্যবহার করা হচ্ছে
         updateChapterProgress(0, totalQuizzesInChapter);
         updatePieChart(0, 0);
         updateUserAchievements({}, totalQuizzesInChapter);

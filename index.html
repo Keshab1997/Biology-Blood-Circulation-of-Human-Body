@@ -41,12 +41,14 @@
         <input type="text" id="search-bar" placeholder="যেকোনো সেকশন খুঁজুন...">
     </div>
 
-    <nav class="nav-grid">
+        <nav class="nav-grid">
         <a href="https://keshab1997.github.io/Study-With-Keshab/" class="nav-button color-home"><i class="fa-solid fa-house"></i><span>হোম</span></a>
         <a href="#dashboard" class="nav-button color-dashboard"><i class="fa-solid fa-chart-line"></i><span>ড্যাশবোর্ড</span></a>
         <a href="#class-notes" class="nav-button color-notes"><i class="fa-solid fa-book-open"></i><span>ক্লাস নোট</span></a>
         <a href="#quiz-sets" class="nav-button color-quiz"><i class="fa-solid fa-file-circle-question"></i><span>কুইজ সেট</span></a>
         <button id="formula-sheet-btn" class="nav-button color-formulas"><i class="fa-solid fa-square-root-variable"></i><span>সূত্র তালিকা</span></button>
+        <!-- === নতুন বাটন যোগ করা হয়েছে === -->
+        <a href="#result-section" class="nav-button color-result"><i class="fa-solid fa-square-poll-vertical"></i><span>রেজাল্ট</span></a>
         <a href="#leaderboard" class="nav-button color-leaderboard"><i class="fa-solid fa-trophy"></i><span>লিডারবোর্ড</span></a>
     </nav>
 
@@ -85,8 +87,6 @@
             <div class="link-container">
                 <a href="class/class1.html">মানবদেহে রক্ত সংবহন</a>
                 <a href="class/class2.html">রক্ত সংবহন MCQ</a>
-                
-                <!-- প্রয়োজন অনুযায়ী আরও লিঙ্ক যোগ করা যাবে -->
             </div>
         </section>
         
@@ -122,6 +122,23 @@
                 </table>
             </div>
         </section>
+
+        <!-- === নতুন রেজাল্ট সেকশন শুরু === -->
+        <section class="card" id="result-section">
+            <h2><i class="fa-solid fa-square-poll-vertical icon-title"></i> আমার রেজাল্ট</h2>
+            <p>এই অধ্যায়ে আপনার পারফরম্যান্স দেখুন এবং বন্ধুদের সাথে শেয়ার করুন।</p>
+            
+            <div id="result-card-container">
+                <!-- এই div টি JavaScript দিয়ে পূরণ করা হবে -->
+            </div>
+
+            <!-- যদি ব্যবহারকারী কুইজ না খেলে থাকে তবে এই মেসেজটি দেখানো হবে -->
+            <div id="no-result-message" style="display: none; text-align: center; padding: 20px; background-color: #f0f0f0; border-radius: 8px;">
+                <p>আপনি এখনও কোনো কুইজে অংশ নেননি।</p>
+                <a href="#quiz-sets" class="button-primary">এখনই কুইজ দিন!</a>
+            </div>
+        </section>
+        <!-- === নতুন রেজাল্ট সেকশন শেষ === -->
         
     </main>
     
