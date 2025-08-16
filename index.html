@@ -122,22 +122,46 @@
             </div>
         </section>
 
-        <!-- === নতুন রেজাল্ট সেকশন শুরু === -->
-        <section class="card" id="result-section">
-            <h2><i class="fa-solid fa-square-poll-vertical icon-title"></i> আমার রেজাল্ট</h2>
-            <p>এই অধ্যায়ে আপনার পারফরম্যান্স দেখুন এবং বন্ধুদের সাথে শেয়ার করুন।</p>
-            
-            <div id="result-card-container">
-                <!-- এই div টি JavaScript দিয়ে পূরণ করা হবে -->
+        <!-- === নতুন এবং উন্নত রেজাল্ট সেকশন শুরু === -->
+<section class="card" id="result-section">
+    <h2><i class="fa-solid fa-square-poll-vertical icon-title"></i> আমার রেজাল্ট</h2>
+    <p>এই অধ্যায়ে আপনার প্রতিটি কুইজের পারফরম্যান্স দেখুন এবং বন্ধুদের সাথে শেয়ার করুন।</p>
+    
+    <!-- প্রতিটি কুইজের রেজাল্ট কার্ড এখানে যোগ হবে -->
+    <div id="result-card-container" class="result-grid">
+        <!-- উদাহরণ কার্ড (এটি JavaScript দ্বারা তৈরি হবে)
+        <div class="result-card">
+            <div class="result-card-header">
+                <h3>কুইজ সেট ১</h3>
+                <span class="quiz-date">তারিখ: dd/mm/yyyy</span>
             </div>
+            <div class="result-card-body">
+                <div class="score-display">
+                    <p>প্রাপ্ত নম্বর</p>
+                    <span class="final-score">৮ / ১০</span>
+                </div>
+                <div class="score-details">
+                    <p class="correct-ans"><span><i class="fa-solid fa-check"></i> সঠিক উত্তর:</span> <strong>৮</strong></p>
+                    <p class="incorrect-ans"><span><i class="fa-solid fa-xmark"></i> ভুল উত্তর:</span> <strong>২</strong></p>
+                </div>
+                <div class="progress-bar-container-result">
+                    <div class="progress-bar-result" style="width: 80%;"></div>
+                </div>
+            </div>
+            <div class="result-card-footer">
+                <button class="share-btn" data-quiz-set="কুইজ সেট ১"><i class="fa-solid fa-share-alt"></i> শেয়ার করুন</button>
+            </div>
+        </div>
+        -->
+    </div>
 
-            <!-- যদি ব্যবহারকারী কুইজ না খেলে থাকে তবে এই মেসেজটি দেখানো হবে -->
-            <div id="no-result-message" style="display: none; text-align: center; padding: 20px; background-color: #f0f0f0; border-radius: 8px;">
-                <p>আপনি এখনও কোনো কুইজে অংশ নেননি।</p>
-                <a href="#quiz-sets" class="button-primary">এখনই কুইজ দিন!</a>
-            </div>
-        </section>
-        <!-- === নতুন রেজাল্ট সেকশন শেষ === -->
+    <!-- যদি ব্যবহারকারী কুইজ না খেলে থাকে তবে এই মেসেজটি দেখানো হবে -->
+    <div id="no-result-message" style="display: none; text-align: center; padding: 20px; background-color: #f9f9f9; border-radius: 8px; margin-top: 20px;">
+        <p style="font-size: 1.1em; margin-bottom: 15px;">আপনি এখনও এই অধ্যায়ের কোনো কুইজে অংশ নেননি।</p>
+        <a href="#quiz-sets" class="button-primary">এখনই কুইজ দিন!</a>
+    </div>
+</section>
+<!-- === নতুন রেজাল্ট সেকশন শেষ === -->
         
     </main>
     

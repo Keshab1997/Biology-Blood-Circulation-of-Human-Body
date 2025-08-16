@@ -1,6 +1,6 @@
 // Filename: js/script.js - Upgraded for Chapter-Based Dashboard & Leaderboard
 
-// === পরিবর্তন ১: CountUp ক্লাসটি মডিউল থেকে ইম্পোর্ট করা হয়েছে ===
+// === পরিবর্তন: CountUp ক্লাসটি মডিউল থেকে সঠিকভাবে ইম্পোর্ট করা হয়েছে ===
 import { CountUp } from 'https://cdn.jsdelivr.net/npm/countup.js@2.0.7/dist/countUp.min.js';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -11,7 +11,8 @@ document.addEventListener('DOMContentLoaded', () => {
             initApp(user);
         } else {
             // যদি ব্যবহারকারী লগইন করা না থাকে, তাহলে লগইন পেজে পাঠিয়ে দেওয়া হবে।
-            window.location.href = 'https://keshab1997.github.io/Study-With-Keshab/login.html';
+            // নিশ্চিত করুন আপনার লগইন পেজের লিঙ্কটি সঠিক
+            window.location.href = 'https://keshab1997.github.io/Study-With-Keshab/login.html'; 
         }
     });
 });
@@ -42,9 +43,11 @@ function initApp(user) {
     setupUIInteractions();
     
     // --- Firebase থেকে অধ্যায়-ভিত্তিক ডেটা লোড ---
-    loadChapterLeaderboard(db, chapterKey, user); // অধ্যায়-ভিত্তিক লিডারবোর্ড
+    loadChapterLeaderboard(db, chapterKey); // অধ্যায়-ভিত্তিক লিডারবোর্ড
     loadDashboardData(db, user.uid, chapterKey); // অধ্যায়-ভিত্তিক ড্যাশবোর্ড
-    generateUserResult(db, user, chapterKey, chapterName); // অধ্যায়-ভিত্তিক রেজাল্ট কার্ড
+    
+    // আপনার উন্নত রেজাল্ট কার্ড ফাংশনটি এখানে কল করা হচ্ছে
+    generateUserResult(db, user, chapterKey, chapterName); 
 }
 
 // ===============================================
@@ -81,7 +84,7 @@ function setupUIInteractions() {
                 darkModeToggle.innerHTML = '<i class="fa-solid fa-sun"></i>';
                 localStorage.setItem('theme', 'dark');
             }
-            if(myPieChart) myPieChart.update();
+            if(window.myPieChart) window.myPieChart.update();
         });
     }
 
@@ -157,11 +160,6 @@ function setupUIInteractions() {
 // --- Firebase Data Loading Functions ---
 // ===============================================
 
-/**
- * Loads chapter-specific leaderboard data.
- * @param {firebase.firestore.Firestore} db
- * @param {string} chapterKey - The Firestore-safe key for the chapter.
- */
 function loadChapterLeaderboard(db, chapterKey) {
     const leaderboardBody = document.getElementById('leaderboard-body');
     if (!leaderboardBody) return;
@@ -229,13 +227,6 @@ function loadChapterLeaderboard(db, chapterKey) {
         });
 }
 
-/**
- * Generates and displays the current user's result card with advanced features.
- * @param {firebase.firestore.Firestore} db
- * @param {firebase.User} user - The current authenticated user.
- * @param {string} chapterKey - The Firestore-safe key for the chapter.
- * @param {string} chapterDisplayName - The display name of the chapter.
- */
 function generateUserResult(db, user, chapterKey, chapterDisplayName) {
     const resultContainer = document.getElementById('result-card-container');
     const noResultMessage = document.getElementById('no-result-message');
@@ -325,7 +316,7 @@ function generateUserResult(db, user, chapterKey, chapterDisplayName) {
                     </div>
                 `;
 
-                // === পরিবর্তন ২: new countUp.CountUp এর বদলে new CountUp ব্যবহার করা হয়েছে ===
+                // === সংশোধন: `new countUp.CountUp` এর বদলে `new CountUp` ব্যবহার করা হয়েছে ===
                 new CountUp('user-score', score, { duration: 1.5 }).start();
                 new CountUp('user-rank', rank, { prefix: '#', duration: 1.5 }).start();
                 
@@ -333,22 +324,25 @@ function generateUserResult(db, user, chapterKey, chapterDisplayName) {
 
                 document.getElementById('download-result-btn').addEventListener('click', function(e) {
                     const btn = e.currentTarget;
+                    const originalText = btn.innerHTML;
                     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> প্রসেসিং...';
                     btn.disabled = true;
 
                     const resultCard = document.querySelector('.result-card');
                     html2canvas(resultCard, {
                         backgroundColor: document.body.classList.contains('dark-mode') ? '#1e1e1e' : '#ffffff',
-                        scale: 2
+                        scale: 2,
+                        useCORS: true
                     }).then(canvas => {
                         const link = document.createElement('a');
                         link.download = `StudyWithKeshab-${cleanChapterName}-Result.png`;
                         link.href = canvas.toDataURL();
                         link.click();
                         
-                        btn.innerHTML = '<i class="fa-solid fa-camera"></i> ছবি ডাউনলোড করুন';
+                        btn.innerHTML = originalText;
                         btn.disabled = false;
-                    }).catch(() => {
+                    }).catch((err) => {
+                        console.error("Download failed:", err);
                         btn.innerHTML = '<i class="fa-solid fa-camera"></i> ডাউনলোড ব্যর্থ হয়েছে';
                         btn.disabled = false;
                     });
@@ -370,17 +364,14 @@ function generateUserResult(db, user, chapterKey, chapterDisplayName) {
     });
 }
 
-
-/**
- * Helper function to create the accuracy donut chart.
- * @param {number} accuracy - The accuracy percentage.
- */
 function createAccuracyChart(accuracy) {
     const ctx = document.getElementById('accuracy-chart')?.getContext('2d');
     if (!ctx) return;
 
-    if (Chart.plugins.getAll().length === 0) { // প্লাগইনটি শুধু একবার রেজিস্টার করবে
+    // চার্টের মাঝখানে টেক্সট দেখানোর জন্য একটি কাস্টম প্লাগইন
+    if (!Chart.plugins.get('centerText')) {
         Chart.plugins.register({
+            id: 'centerText',
             beforeDraw: function(chart) {
                 if (chart.options.elements.center) {
                     const centerConfig = chart.options.elements.center;
@@ -441,13 +432,6 @@ function createAccuracyChart(accuracy) {
     });
 }
 
-
-/**
- * Loads all chapter-specific data for the user dashboard.
- * @param {firebase.firestore.Firestore} db
- * @param {string} userId - The current user's ID.
- * @param {string} chapterKey - The Firestore-safe key for the chapter.
- */
 function loadDashboardData(db, userId, chapterKey) {
     const quizLinks = document.querySelectorAll('#quiz-sets .link-container a');
     const totalQuizzesInChapter = quizLinks.length;
@@ -485,11 +469,12 @@ function updateChapterProgress(completed, total) {
     progressText.textContent = `${percentage}% সম্পন্ন (${completed}/${total}টি কুইজ)`;
 }
 
-let myPieChart = null;
+// myPieChart কে গ্লোবাল স্কোপে রাখা হয়েছে যাতে এটি আপডেট করা যায়
+window.myPieChart = null; 
 function updatePieChart(correct, wrong) {
     const ctx = document.getElementById('quiz-pie-chart')?.getContext('2d');
     if (!ctx) return;
-    if (myPieChart) myPieChart.destroy();
+    if (window.myPieChart) window.myPieChart.destroy();
     const chartData = (correct === 0 && wrong === 0) 
         ? { labels: ['এখনো কোনো কুইজ দেননি'], datasets: [{ data: [1], backgroundColor: ['#bdc3c7'] }] }
         : {
@@ -501,7 +486,7 @@ function updatePieChart(correct, wrong) {
                 borderWidth: 3
             }]
         };
-    myPieChart = new Chart(ctx, {
+    window.myPieChart = new Chart(ctx, {
         type: 'pie',
         data: chartData,
         options: {
