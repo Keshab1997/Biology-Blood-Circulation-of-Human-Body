@@ -3,6 +3,9 @@
 // === পরিবর্তন: CountUp ক্লাসটি মডিউল থেকে সঠিকভাবে ইম্পোর্ট করা হয়েছে ===
 import { CountUp } from 'https://cdn.jsdelivr.net/npm/countup.js@2.0.7/dist/countUp.min.js';
 
+// এই ভেরিয়েবলটি নিশ্চিত করবে যে চার্টের প্লাগইনটি শুধু একবার রেজিস্টার হবে
+let isChartPluginRegistered = false;
+
 document.addEventListener('DOMContentLoaded', () => {
     // Firebase Authentication Check
     firebase.auth().onAuthStateChanged(user => {
@@ -61,8 +64,8 @@ function setupUserProfile(user) {
 
     if(displayNameElement) displayNameElement.textContent = user.displayName || 'ব্যবহারকারী';
     if(emailElement) emailElement.textContent = user.email;
-    if(profilePicElement && user.photoURL) {
-        profilePicElement.src = user.photoURL;
+    if(profilePicElement) {
+        profilePicElement.src = user.photoURL || '/Study-With-Keshab/images/default-avatar.png';
     }
 }
 
@@ -247,7 +250,8 @@ function generateUserResult(db, user, chapterKey, chapterDisplayName) {
                 const chapterData = doc.data().chapters[chapterKey];
                 const score = chapterData.totalScore || 0;
                 const userName = user.displayName || 'Unknown User';
-                const userPhoto = user.photoURL || 'images/default-avatar.png';
+                // === পরিবর্তন করা হয়েছে: ডিফল্ট ছবির পাথ ঠিক করা হয়েছে ===
+                const userPhoto = user.photoURL || '/Study-With-Keshab/images/default-avatar.png';
                 
                 const totalCorrect = chapterData.totalCorrect || 0;
                 const totalWrong = chapterData.totalWrong || 0;
@@ -316,7 +320,6 @@ function generateUserResult(db, user, chapterKey, chapterDisplayName) {
                     </div>
                 `;
 
-                // === সংশোধন: `new countUp.CountUp` এর বদলে `new CountUp` ব্যবহার করা হয়েছে ===
                 new CountUp('user-score', score, { duration: 1.5 }).start();
                 new CountUp('user-rank', rank, { prefix: '#', duration: 1.5 }).start();
                 
@@ -364,20 +367,20 @@ function generateUserResult(db, user, chapterKey, chapterDisplayName) {
     });
 }
 
+// === পরিবর্তন করা হয়েছে: Chart.js এর পুরোনো ভার্সনের সাথে সামঞ্জস্যপূর্ণ করা হয়েছে ===
 function createAccuracyChart(accuracy) {
     const ctx = document.getElementById('accuracy-chart')?.getContext('2d');
     if (!ctx) return;
 
-    // চার্টের মাঝখানে টেক্সট দেখানোর জন্য একটি কাস্টম প্লাগইন
-    if (!Chart.plugins.get('centerText')) {
+    // প্লাগইনটি শুধু একবার রেজিস্টার করা হচ্ছে
+    if (!isChartPluginRegistered) {
         Chart.plugins.register({
-            id: 'centerText',
             beforeDraw: function(chart) {
                 if (chart.options.elements.center) {
                     const centerConfig = chart.options.elements.center;
                     const ctx = chart.chart.ctx;
                     const chartArea = chart.chartArea;
-                    if(!chartArea) return;
+                    if (!chartArea) return;
 
                     const fontStyle = centerConfig.fontStyle || 'Arial';
                     const txt = centerConfig.text;
@@ -395,6 +398,7 @@ function createAccuracyChart(accuracy) {
                 }
             }
         });
+        isChartPluginRegistered = true; // ফ্ল্যাগ সেট করা হলো যাতে আর রেজিস্টার না হয়
     }
 
     const chartData = {
